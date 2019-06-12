@@ -65,6 +65,8 @@
 
 Use SLF4J as your facade and Log4j2 as your implementation. You can then bridge pretty much anything else you would encounter in your dependencies to SLF4J.
 
+EDIT: logback has become my prefered implementation and is well supported by spring boot with some helpful additional features.
+
 --------------------------------
 - Setting up SLF4J over Log4j2 -
 --------------------------------
@@ -208,7 +210,7 @@ Maven:
 
     - So if you have a log message template pattern like this:
         <Pattern>%X{first} %X{last} - %m%n</Pattern>
-    - and you add the corresponding the keys to MDC via static method calls at runtime in a thread:
+    - and you add the corresponding keys to MDC via static method calls at runtime in a thread:
         MDC.put("first", "Richard");
         MDC.put("last", "Nixon");
 
@@ -217,11 +219,11 @@ Maven:
         logger.debug("The most beautiful two words in English.");
 
     - The above log statements would interpolate to the following in the console and your log files:
-        Richard Nixon - I am not a crook.
-        Richard Nixon - Attributed to the former US president. 17 Nov 1973.
+        Richard Nixon - Check enclosed.
+        Richard Nixon - The most beautiful two words in English.
 
     ** Credit to logback documentation for the above example.
 
-    - This is a powerful concept if you replace first/last name with something like customerId or userUuid. It provides more context in a templtated way that doesn't involve verbosity in your log statements.
+    - This is a powerful concept if you replace first/last name with something like a customerId, or traceId. It provides more context in a templated way that doesn't involve repeated verbosity in your log statements.
 
-    - The trade off is that you instead have to manage the values you add to the keys in MDC.
+    - The trade off is that you instead have to manage and intialize the values you add to the keys in MDC across threads and at the start of whatever counts as a processing context in your application.
