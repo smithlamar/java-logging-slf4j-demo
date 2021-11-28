@@ -197,16 +197,12 @@ Maven:
 - A few words on MDC -
 ----------------------
 
-    - Assume you had a class that did some work and you wanted to run it on multiple threads to increase performance.
-    - Suppose that you set it up so that a new thread was created for each individual user.
-    - Your logger is initiated statically for the class that leveraged across each thread. Your log messages could get chaotic as each thread moves around various parts of your code simultaneously and spits out similar log statements in an overall non-sequential way from the single logger.
+    - MDC is a great way to create structured contextual logs. Its basically a map that you put key value pairs in. For a given thread, your MDC map can have keys that pair with trace Ids and other values that would apply to every log statement on that thread. This is wonderful for searching for a specific transaction's logs in a tool like splunk or even when grepping the log file directly. Once your context switches on the thread - e.g. you start processing a new transaction on the same thread, MDC provides static methods to clear the values that have been added. I've found it practical to create helper utility methods that manage MDC for you based on the types of inputs your code will receive. E.g. MyMdcUtil.setContext(myInputObject). In this setContext method that you create, you would access MDC statically and take the relavant values from your input object and put them in MDC by structured keys that you determine based on what metadata you want to see in your logs. In your logback file, you can interpolate the key value pairs from MDC on a given thread that will be added for every log statement on the thread so long as the value is there in the static MDC map.
 
-    - This is where MDC (Mapped Diagnostic Context) comes in.
-    - Really, it's just a big static map/dictionary of key value pairs.
-    - One of these Maps is created for every thread that runs in a process. This map is actually not tied directly to your loggers, and you can really put any key/value pair in it at any time, even without instantiating any logger. The MDC data dies with the thread.
+ An MDC map is created for every thread that runs in a process. This map is actually not tied directly to your loggers, and you can really put any key/value pair in it at any time, even without instantiating any logger. The MDC data dies with the thread. Do not treat this as a dumping ground for global variables - it will only bring you pain if you do so. MDCs purpose is to hold key value pairs that can help add context to your log statements on a given thread.
 
     - Why is this useful:
-    You can set up your log statement templates to include values that are currently in the MDC.
+    You can set up your log statement templates e.g. in logback.xml to include values that are currently in MDC.
 
     - So if you have a log message template pattern like this:
         <Pattern>%X{first} %X{last} - %m%n</Pattern>
@@ -226,4 +222,4 @@ Maven:
 
     - This is a powerful concept if you replace first/last name with something like a customerId, or traceId. It provides more context in a templated way that doesn't involve repeated verbosity in your log statements.
 
-    - The trade off is that you instead have to manage and intialize the values you add to the keys in MDC across threads and at the start of whatever counts as a processing context in your application.
+    - The trade off is that you instead have to manage and intialize the values you add to the keys in MDC across threads and at the start of whatever counts as a processing context in your application and also re-establish those when work for the same context gets passed off to a different thread. You also have to manage the clean up of the context e.g. resetting the values when a new transaction / unit of work starts on a given thread that leverages MDC.
